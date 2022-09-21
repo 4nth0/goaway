@@ -4,63 +4,73 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/4nth0/goaway/redirect"
+	"github.com/4nth0/goaway/rules"
 )
 
-type Condition struct {
-	Source        string
-	Operator      string
-	ExpectedValue interface{}
-}
-
-type ConditionedRedirect struct {
-	Value     string
-	Condition Condition
-}
-
-type Redirect struct {
-	Default    string
-	Conditions []ConditionedRedirect
-}
-
-const SourceDelimiter = "."
-
 func main() {
-	redirects := map[string]Redirect{
-		"1234": {
-			Default: "https://google.com",
-			Conditions: []ConditionedRedirect{
+	client := redirect.NewClient()
+
+	client.Register("1234", "https://default.com", []redirect.ConditionedRedirect{
+		{
+			Rules: []rules.Condition{
 				{
-					Value: "https://google.fr",
-					Condition: Condition{
-						Source:        "query.params.lang",
-						Operator:      "eq",
-						ExpectedValue: "fr",
-					},
+					Source:        "query.params.lang",
+					Operator:      "eq",
+					ExpectedValue: "fr",
 				},
 				{
-					Value: "https://google.it",
-					Condition: Condition{
-						Source:        "query.params.lang",
-						Operator:      "eq",
-						ExpectedValue: "it",
-					},
+					Source:        "time.hour",
+					Operator:      "gt",
+					ExpectedValue: 17,
 				},
 				{
-					Value: "https://yahoo.com",
-					Condition: Condition{
-						Source:        "query.params.joke",
-						Operator:      "eq",
-						ExpectedValue: "1",
-					},
+					Source:        "time.hour",
+					Operator:      "lt",
+					ExpectedValue: 19,
 				},
 			},
+			Value: "https://gotosleep.co",
 		},
-	}
+		{
+			Rules: []rules.Condition{
+				{
+					Source:        "query.params.lang",
+					Operator:      "eq",
+					ExpectedValue: "fr",
+				},
+			},
+			Value: "https://google.fr",
+		},
+		{
+			Rules: []rules.Condition{
+				{
+					Source:        "query.params.lang",
+					Operator:      "eq",
+					ExpectedValue: "it",
+				},
+			},
+			Value: "https://google.it",
+		},
+		{
+			Rules: []rules.Condition{
+				{
+					Source:        "query.params.joke",
+					Operator:      "eq",
+					ExpectedValue: "1",
+				},
+			},
+			Value: "https://yahoo.com",
+		},
+	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if redirect, ok := redirects[strings.TrimPrefix(r.URL.Path, "/")]; ok {
 
-			path := GetRedirectPath(redirect, r)
+		id := strings.TrimPrefix(r.URL.Path, "/")
+
+		if client.RedirectExists(id) {
+			path := client.GetRedirectPath(id, r)
 
 			w.Write([]byte(path))
 			return
@@ -69,26 +79,4 @@ func main() {
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func GetRedirectPath(redirect Redirect, r *http.Request) string {
-	for _, condition := range redirect.Conditions {
-		splitedSource := strings.Split(condition.Condition.Source, SourceDelimiter)
-
-		switch splitedSource[0] {
-		case "query":
-			if isValidQueryCondition(splitedSource[1], splitedSource[2], condition.Condition.ExpectedValue, r) {
-				return condition.Value
-			}
-		}
-	}
-	return redirect.Default
-}
-
-func isValidQueryCondition(context, key string, expectedValue interface{}, r *http.Request) bool {
-	switch context {
-	case "params":
-		return r.URL.Query().Get(key) == expectedValue
-	}
-	return false
 }
