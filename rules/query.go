@@ -2,10 +2,13 @@ package rules
 
 import "net/http"
 
-func isValidQueryCondition(context, key string, expectedValue interface{}, r *http.Request) bool {
+func isValidQueryCondition(context, key, operator string, expectedValue interface{}, r *http.Request) bool {
+	valueToCompare := ""
+
 	switch context {
 	case "params":
-		return r.URL.Query().Get(key) == expectedValue
+		valueToCompare = r.URL.Query().Get(key)
 	}
-	return false
+
+	return compare(valueToCompare, operator, expectedValue.(string))
 }

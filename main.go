@@ -12,23 +12,23 @@ import (
 func main() {
 	client := redirect.NewClient()
 
-	client.Register("1234", "https://default.com", []redirect.ConditionedRedirect{
+	client.Register("1234", "https://default.com", []redirect.Conditions{
 		{
 			Rules: []rules.Condition{
 				{
-					Source:        "query.params.lang",
-					Operator:      "eq",
-					ExpectedValue: "fr",
+					Source:         "query.params.lang",
+					Operator:       "eq",
+					ValueToCompare: "fr",
 				},
 				{
-					Source:        "time.hour",
-					Operator:      "gt",
-					ExpectedValue: 17,
+					Source:         "time.hour",
+					Operator:       "gt",
+					ValueToCompare: 17,
 				},
 				{
-					Source:        "time.hour",
-					Operator:      "lt",
-					ExpectedValue: 19,
+					Source:         "time.hour",
+					Operator:       "lt",
+					ValueToCompare: 19,
 				},
 			},
 			Value: "https://gotosleep.co",
@@ -36,9 +36,9 @@ func main() {
 		{
 			Rules: []rules.Condition{
 				{
-					Source:        "query.params.lang",
-					Operator:      "eq",
-					ExpectedValue: "fr",
+					Source:         "query.params.lang",
+					Operator:       "eq",
+					ValueToCompare: "fr",
 				},
 			},
 			Value: "https://google.fr",
@@ -46,9 +46,9 @@ func main() {
 		{
 			Rules: []rules.Condition{
 				{
-					Source:        "query.params.lang",
-					Operator:      "eq",
-					ExpectedValue: "it",
+					Source:         "query.params.lang",
+					Operator:       "eq",
+					ValueToCompare: "it",
 				},
 			},
 			Value: "https://google.it",
@@ -56,9 +56,9 @@ func main() {
 		{
 			Rules: []rules.Condition{
 				{
-					Source:        "query.params.joke",
-					Operator:      "eq",
-					ExpectedValue: "1",
+					Source:         "query.params.joke",
+					Operator:       "eq",
+					ValueToCompare: "1",
 				},
 			},
 			Value: "https://yahoo.com",

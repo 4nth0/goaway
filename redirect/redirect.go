@@ -1,20 +1,21 @@
 package redirect
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/4nth0/goaway/rules"
 )
 
-type ConditionedRedirect struct {
-	Value string
-	Rules []rules.Condition
+type Conditions struct {
+	Value string            `json:"value"`
+	Rules []rules.Condition `json:"rules"`
 }
 
 type Redirect struct {
-	Default    string
-	Conditions []ConditionedRedirect
+	Default   string       `json:"default"`
+	Redirects []Conditions `json:"redirects"`
 }
 
 type Client struct {
@@ -27,10 +28,10 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Register(id string, defaultValue string, redirects []ConditionedRedirect) Redirect {
+func (c *Client) Register(id string, defaultValue string, redirects []Conditions) Redirect {
 	r := Redirect{
-		Default:    defaultValue,
-		Conditions: redirects,
+		Default:   defaultValue,
+		Redirects: redirects,
 	}
 	c.store[id] = r
 	return r
@@ -53,10 +54,15 @@ func (c *Client) GetRedirectPath(id string, r *http.Request) string {
 	if err != nil {
 		return ""
 	}
-	for _, condition := range redirect.Conditions {
+	for _, condition := range redirect.Redirects {
 		if rules.IsConditionSucceeding(condition.Rules, r) {
 			return condition.Value
 		}
 	}
 	return redirect.Default
+}
+
+func (c Client) Dump() string {
+	b, _ := json.MarshalIndent(c.store, "", "	")
+	return string(b)
 }

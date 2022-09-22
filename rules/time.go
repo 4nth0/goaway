@@ -13,20 +13,5 @@ func isValidTimeCondition(kind, operator string, expectedValue interface{}, r *h
 		valueToCompare = t.Hour()
 	}
 
-	switch operator {
-	case "gt":
-		return valueToCompare > expectedValue.(int)
-	case "lt":
-		return valueToCompare < expectedValue.(int)
-	case "eq":
-		return valueToCompare == expectedValue.(int)
-	case "gte":
-		return valueToCompare >= expectedValue.(int)
-	case "lte":
-		return valueToCompare <= expectedValue.(int)
-	case "neq":
-		return valueToCompare != expectedValue.(int)
-	}
-
-	return false
+	return compare(valueToCompare, operator, expectedValue.(int))
 }

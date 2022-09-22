@@ -6,14 +6,9 @@ import (
 )
 
 type Condition struct {
-	Source        string
-	Operator      string
-	ExpectedValue interface{}
-}
-
-type ConditionedRedirect struct {
-	Value string
-	Rules []Condition
+	Source         string      `json:"source"`
+	Operator       string      `json:"operator"`
+	ValueToCompare interface{} `json:"valueToCompare"`
 }
 
 const SourceDelimiter = "."
@@ -24,11 +19,11 @@ func IsConditionSucceeding(rules []Condition, r *http.Request) bool {
 
 		switch splitedSource[0] {
 		case "query":
-			if !isValidQueryCondition(splitedSource[1], splitedSource[2], rule.ExpectedValue, r) {
+			if !isValidQueryCondition(splitedSource[1], splitedSource[2], rule.Operator, rule.ValueToCompare, r) {
 				return false
 			}
 		case "time":
-			if !isValidTimeCondition(splitedSource[1], rule.Operator, rule.ExpectedValue, r) {
+			if !isValidTimeCondition(splitedSource[1], rule.Operator, rule.ValueToCompare, r) {
 				return false
 			}
 		}
