@@ -13,5 +13,5 @@ func isValidTimeCondition(kind, operator string, expectedValue interface{}, r *h
 		valueToCompare = t.Hour()
 	}
 
-	return compare(valueToCompare, operator, expectedValue.(int))
+	return compare(valueToCompare, operator, int(expectedValue.(float64)))
 }

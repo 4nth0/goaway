@@ -1,8 +1,6 @@
 package redirect
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/4nth0/goaway/rules"
@@ -18,13 +16,18 @@ type Redirect struct {
 	Redirects []Conditions `json:"redirects"`
 }
 
-type Client struct {
-	store map[string]Redirect
+type DBClient interface {
+	ByID(id string) (*Redirect, error)
+	Store(id string, redirect Redirect)
 }
 
-func NewClient() *Client {
+type Client struct {
+	db DBClient
+}
+
+func NewClient(db DBClient) *Client {
 	return &Client{
-		store: make(map[string]Redirect),
+		db: db,
 	}
 }
 
@@ -33,24 +36,12 @@ func (c *Client) Register(id string, defaultValue string, redirects []Conditions
 		Default:   defaultValue,
 		Redirects: redirects,
 	}
-	c.store[id] = r
+	c.db.Store(id, r)
 	return r
 }
 
-func (c *Client) ByID(id string) (*Redirect, error) {
-	if redirect, ok := c.store[id]; ok {
-		return &redirect, nil
-	}
-	return nil, errors.New("redirect not found")
-}
-
-func (c *Client) RedirectExists(id string) bool {
-	_, err := c.ByID(id)
-	return err == nil
-}
-
 func (c *Client) GetRedirectPath(id string, r *http.Request) string {
-	redirect, err := c.ByID(id)
+	redirect, err := c.db.ByID(id)
 	if err != nil {
 		return ""
 	}
@@ -60,9 +51,4 @@ func (c *Client) GetRedirectPath(id string, r *http.Request) string {
 		}
 	}
 	return redirect.Default
-}
-
-func (c Client) Dump() string {
-	b, _ := json.MarshalIndent(c.store, "", "	")
-	return string(b)
 }
